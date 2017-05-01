@@ -12,7 +12,8 @@ struct_events! {
     keyboard: {
         key_escape: Escape,
         key_up: Up,
-        key_down: Down
+        key_down: Down,
+        key_space: Space
     }
     else: {
         quit: Quit { .. }
@@ -43,6 +44,7 @@ impl<'a> Phi<'a> {
 pub enum ViewAction {
     None,
     Quit,
+    ChangeView(Box<View>),
 }
 
 pub trait View {
@@ -123,7 +125,9 @@ where F: Fn(&mut Phi) -> Box<View> {
         context.events.pump();
         match (*current_view).render(&mut context, elapsed) {
             ViewAction::Quit => break,
-            ViewAction::None => context.renderer.present()
+            ViewAction::None => context.renderer.present(),
+            ViewAction::ChangeView(new_view) =>
+                current_view = new_view,
         }
     }
 }
