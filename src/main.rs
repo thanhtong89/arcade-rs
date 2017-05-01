@@ -4,7 +4,7 @@ mod phi;
 mod views;
 
 fn main() {
-    ::phi::spawn("ArcadeRS Shooter", |_| {
-        Box::new(::views::ViewA)
+    ::phi::spawn("ArcadeRS Shooter", |context| {
+        Box::new(::views::ShipView::new(context))
     });
 }
