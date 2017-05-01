@@ -14,6 +14,7 @@ macro_rules! struct_events {
             // None        => Nothing happening _now_
             $( pub $k_alias: Option<bool>, )*
             $( pub $e_alias: bool, )*
+            resize: Option<(u32, u32)>,
         }
 
         impl ImmediateEvents {
@@ -21,6 +22,7 @@ macro_rules! struct_events {
                 ImmediateEvents {
                     $( $k_alias: None, )*
                     $( $e_alias: false, )*
+                    resize: None,
                 }
             }
         }
@@ -46,16 +48,21 @@ macro_rules! struct_events {
             }
 
             // Update the events record
-            pub fn pump(&mut self) {
+            pub fn pump(&mut self, renderer: &mut ::sdl2::render::Renderer) {
                 self.now = ImmediateEvents::new();
 
                 // If the SDL context is dropped, then poll_iter() will simply stop
                 // yielding any input.
                 for event in self.pump.poll_iter() {
                     use sdl2::event::Event::*;
+                    use sdl2::event::WindowEventId::Resized;
                     use sdl2::keyboard::Keycode::*;
 
                     match event {
+                        Window { win_event_id: Resized, .. } => {
+                            self.now.resize =
+                                Some(renderer.output_size().unwrap());
+                        },
                         $( $e_sdl => { self.now.$e_alias = true; }
                         ),*
                         KeyDown { keycode, .. } => match keycode {

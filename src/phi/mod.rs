@@ -38,6 +38,10 @@ impl<'a> Phi<'a> {
                             .build().unwrap()
         }
     }
+    pub fn output_size(&self) -> (f64, f64) {
+        let (w, h) = self.renderer.output_size().unwrap();
+        (w as f64, h as f64)
+    }
 }
 
 // A `ViewAction` is a way for the currently executed view to
@@ -92,7 +96,7 @@ where F: Fn(&mut Phi) -> Box<View> {
 
     // Create the window
     let window = video.window("ArcadeRS Shooter", 800, 600)
-        .position_centered().opengl()
+        .position_centered().opengl().resizable()
         .build().unwrap();
 
     // Create context
@@ -124,7 +128,7 @@ where F: Fn(&mut Phi) -> Box<View> {
             last_second = now;
             fps = 0;
         }
-        context.events.pump();
+        context.events.pump(&mut context.renderer);
         match (*current_view).render(&mut context, elapsed) {
             ViewAction::Quit => break,
             ViewAction::None => context.renderer.present(),
