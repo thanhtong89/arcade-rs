@@ -1,43 +1,53 @@
 extern crate sdl2;
 
-// #[macro_use] asks the compiler to import the macros defined in the `events`
-// module. This is necessary because macros cannot be namespaced -- macro
-// expansion happens before the concept of namespace even starts to _exist_ in
-// the compilation timeline.
-#[macro_use]
 mod phi;
 mod views;
 
-use sdl2::pixels::Color;
-use phi::Events;
+use phi::{Phi, View, ViewAction};
+use views::DefaultView;
 
 fn main() {
     // Initialize SDL2
     let sdl_context = sdl2::init().unwrap();
     let video = sdl_context.video().unwrap();
-
+    let mut timer = sdl_context.timer().unwrap();
 
     // Create the window
     let window = video.window("ArcadeRS Shooter", 800, 600)
         .position_centered().opengl()
         .build().unwrap();
 
-    let mut renderer = window.renderer()
-        .accelerated()
-        .build().unwrap();
+    // create context
+    let mut context = Phi::new(sdl_context, window);
+    let mut current_view = Box::new(DefaultView);
 
-    // Prepare the events record
-    let mut events = Events::new(sdl_context.event_pump().unwrap());
+    // Frame timimg
+    let interval = 1000 / 60;
+    let mut before = timer.ticks();
+    let mut last_second = timer.ticks();
+    let mut fps = 0u16;
 
     loop {
-        events.pump();
+        let now = timer.ticks();
+        let dt = now - before;
+        let elapsed = dt as f64 / 1000.0;
 
-        if events.now.quit || events.now.key_escape == Some(true) {
-            break;
+        if dt < interval {
+            timer.delay(interval - dt);
+            continue;
         }
-        // Render a black window
-        renderer.set_draw_color(Color::RGB(0, 0, 0));
-        renderer.clear();
-        renderer.present();
+
+        before = now;
+        fps += 1;
+        if now - last_second > 1000 {
+            println!("FPS: {}", fps);
+            last_second = now;
+            fps = 0;
+        }
+        context.events.pump();
+        match (*current_view).render(&mut context, elapsed) {
+            ViewAction::Quit => break,
+            ViewAction::None => context.renderer.present()
+        }
     }
 }

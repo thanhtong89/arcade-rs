@@ -1,5 +1,10 @@
+// #[macro_use] asks the compiler to import the macros defined in the `events`
+// module. This is necessary because macros cannot be namespaced -- macro
+// expansion happens before the concept of namespace even starts to _exist_ in
+// the compilation timeline.
 #[macro_use]
 mod events;
+extern crate sdl2;
 
 use sdl2::render::Renderer;
 
@@ -19,6 +24,17 @@ struct_events! {
 pub struct Phi<'window> {
     pub events: Events,
     pub renderer: Renderer<'window>,
+}
+
+impl<'a> Phi<'a> {
+    pub fn new(sdl_context: sdl2::Sdl, window: sdl2::video::Window) -> Phi<'a> {
+        Phi {
+            events : Events::new(sdl_context.event_pump().unwrap()),
+            renderer : window.renderer()
+                            .accelerated()
+                            .build().unwrap()
+        }
+    }
 }
 
 // A `ViewAction` is a way for the currently executed view to
