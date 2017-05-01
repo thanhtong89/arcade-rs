@@ -4,6 +4,7 @@
 // the compilation timeline.
 #[macro_use]
 mod events;
+pub mod data;
 extern crate sdl2;
 
 use sdl2::render::Renderer;
